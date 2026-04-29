@@ -5,7 +5,7 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const apiUrl = process.env.API_URL || 'http://localhost:8000/api';
-const wsUrl = apiUrl.replace(/^http/, 'ws');
+const wsUrl = apiUrl.replace(/^http/, 'ws').replace(/\/api\/?$/, '');
 
 const envConfigFile = `export const environment = {
   production: true,
