@@ -29,7 +29,7 @@ import { Subscription } from 'rxjs';
 </div>
   `,
   styles: [`
-    :host { display: block; h-screen; }
+    :host { display: block; height: 100vh; }
   `]
 })
 export class AdminLayout implements OnInit, OnDestroy {
