@@ -36,4 +36,8 @@ export class SolicitudService {
       { headers: this.getHeaders() }
     );
   }
+
+  listarHistorial(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/historial`, { headers: this.getHeaders() });
+  }
 }

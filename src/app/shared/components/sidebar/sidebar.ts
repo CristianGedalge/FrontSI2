@@ -55,6 +55,14 @@ import { AuthService } from '../../../core/services/auth.service';
       <span class="font-bold text-sm">Reportes</span>
     </a>
 
+    <a *ngIf="auth.currentUser()?.rol === 'admin'" routerLink="/admin/historial" routerLinkActive="bg-primary-500 text-white shadow-lg shadow-primary-500/20"
+       class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all group">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 group-hover:scale-110 transition-transform">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+      </svg>
+      <span class="font-bold text-sm">Historial</span>
+    </a>
+
     <a *ngIf="auth.currentUser()?.rol === 'superadmin'" routerLink="/super-admin/talleres" routerLinkActive="bg-primary-500 text-white shadow-lg shadow-primary-500/20"
        class="flex items-center gap-4 px-4 py-3.5 rounded-2xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all group">
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 group-hover:scale-110 transition-transform">

@@ -33,6 +33,10 @@ export const routes: Routes = [
       {
         path: 'reportes',
         loadComponent: () => import('./features/admin/reportes/reportes.component').then(m => m.ReportesComponent)
+      },
+      {
+        path: 'historial',
+        loadComponent: () => import('./features/admin/historial/historial.component').then(m => m.HistorialComponent)
       }
     ]
   },
