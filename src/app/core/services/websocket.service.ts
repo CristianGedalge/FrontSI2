@@ -22,9 +22,11 @@ export class WebsocketService {
     };
 
     this.socket.onmessage = (event) => {
+      console.log('[WebSocket] Mensaje recibido del servidor:', event.data);
       try {
         const message = JSON.parse(event.data);
         if (message.evento === 'NUEVA_EMERGENCIA') {
+          console.log('[WebSocket] Notificando a los componentes...');
           this.emergencias$.next(message.datos);
         }
       } catch (error) {
