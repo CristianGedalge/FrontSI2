@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment';
 })
 export class MecanicoService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/mecanicos/`;
+  private apiUrl = `${environment.apiUrl}/mecanicos`;
 
   private getHeaders() {
     const token = localStorage.getItem('token');

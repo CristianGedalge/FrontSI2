@@ -179,12 +179,12 @@ import { Subscription } from 'rxjs';
     <h2 class="text-xl font-black text-slate-800 mb-2">Asignar Mecánico</h2>
     <p class="text-slate-500 text-sm mb-6">Selecciona el mecánico que atenderá esta emergencia.</p>
     
-    <div *ngIf="mecanicos().length === 0" class="text-center py-4">
-      <p class="text-slate-400 font-medium">No hay mecánicos registrados en tu taller.</p>
+    <div *ngIf="mecanicosFiltrados().length === 0" class="text-center py-4">
+      <p class="text-slate-400 font-medium">No hay mecánicos disponibles con la especialidad requerida ({{ solicitudActiva?.nombre_servicio }}).</p>
     </div>
 
     <div class="space-y-2 max-h-60 overflow-y-auto mb-6">
-      <button *ngFor="let mec of mecanicos()" 
+      <button *ngFor="let mec of mecanicosFiltrados()" 
               (click)="mecanicoSeleccionado = mec.id"
               class="w-full flex items-center gap-4 p-4 rounded-2xl border-2 transition-all text-left"
               [ngClass]="mecanicoSeleccionado === mec.id ? 'border-green-500 bg-green-50' : 'border-slate-100 hover:border-slate-300'">
@@ -192,7 +192,15 @@ import { Subscription } from 'rxjs';
           {{ mec.nombre?.charAt(0) || '?' }}
         </div>
         <div class="flex-grow">
-          <p class="font-bold text-slate-800">{{ mec.nombre }}</p>
+          <div class="flex items-center gap-2">
+            <p class="font-bold text-slate-800">{{ mec.nombre }}</p>
+            <span *ngIf="mec.disponible" class="px-2 py-0.5 bg-green-50 text-green-600 text-[9px] font-black uppercase rounded">
+              Disponible
+            </span>
+            <span *ngIf="!mec.disponible" class="px-2 py-0.5 bg-red-50 text-red-600 text-[9px] font-black uppercase rounded">
+              Ocupado
+            </span>
+          </div>
           <p class="text-xs text-slate-400">{{ mec.telefono || 'Sin teléfono' }}</p>
         </div>
         <div *ngIf="mecanicoSeleccionado === mec.id" class="text-green-500">
@@ -233,6 +241,16 @@ export class NotificacionesComponent implements OnInit, OnDestroy {
   solicitudes = signal<any[]>([]);
   mecanicos = signal<any[]>([]);
   cargando = signal(false);
+
+  mecanicosFiltrados(): any[] {
+    if (!this.solicitudActiva) return [];
+    const servicioId = this.solicitudActiva.tipo_servicio_id;
+    return this.mecanicos().filter(mec => 
+      mec.disponible && 
+      mec.especialidades && 
+      mec.especialidades.includes(servicioId)
+    );
+  }
 
   // Modales
   modalAceptar = signal(false);

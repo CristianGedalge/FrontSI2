@@ -32,6 +32,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
           <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Correo</th>
           <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Teléfono</th>
           <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Especialidad</th>
+          <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Disponibilidad</th>
           <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Acciones</th>
         </tr>
       </thead>
@@ -48,8 +49,21 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
           <td class="px-8 py-5 text-slate-500 text-sm">{{ mec.correo }}</td>
           <td class="px-8 py-5 text-slate-500 text-sm">{{ mec.telefono || 'N/A' }}</td>
           <td class="px-8 py-5">
-            <span class="px-3 py-1 bg-blue-50 text-blue-600 text-[10px] font-black uppercase rounded-lg">
-              Registrado
+            <div class="flex flex-wrap gap-1">
+              <span *ngFor="let espId of mec.especialidades" class="px-2 py-0.5 bg-blue-50 text-blue-600 text-[10px] font-bold uppercase rounded">
+                {{ obtenerNombreEspecialidad(espId) }}
+              </span>
+              <span *ngIf="!mec.especialidades || mec.especialidades.length === 0" class="text-xs text-slate-400 italic">
+                Ninguna
+              </span>
+            </div>
+          </td>
+          <td class="px-8 py-5">
+            <span *ngIf="mec.disponible" class="px-3 py-1 bg-green-50 text-green-600 text-[10px] font-black uppercase rounded-lg">
+              Disponible
+            </span>
+            <span *ngIf="!mec.disponible" class="px-3 py-1 bg-red-50 text-red-600 text-[10px] font-black uppercase rounded-lg">
+              No Disponible
             </span>
           </td>
           <td class="px-8 py-5 text-right">
@@ -68,7 +82,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
           </td>
         </tr>
         <tr *ngIf="mecanicos().length === 0">
-          <td colspan="5" class="px-8 py-20 text-center text-slate-400 italic">
+          <td colspan="6" class="px-8 py-20 text-center text-slate-400 italic">
             No hay mecánicos registrados en este taller.
           </td>
         </tr>
@@ -159,6 +173,11 @@ export class MecanicosComponent implements OnInit {
   cargar() {
     this.service.listar().subscribe(res => this.mecanicos.set(res));
     this.tipoService.listar().subscribe(res => this.tiposServicio.set(res));
+  }
+
+  obtenerNombreEspecialidad(id: number): string {
+    const ts = this.tiposServicio().find(t => t.id === id);
+    return ts ? ts.nombre : `Servicio #${id}`;
   }
 
   toggleEspecialidad(id: number) {
