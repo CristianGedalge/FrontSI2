@@ -113,9 +113,10 @@ export class Login {
         const user = this.authService.currentUser();
         if (user && user.rol === 'admin') {
           this.router.navigate(['/admin/dashboard']);
+        } else if (user && user.rol === 'superadmin') {
+          this.router.navigate(['/super-admin/dashboard']);
         } else {
-          // Si es super-admin u otro, podrías redirigir a otro lado
-          this.router.navigate(['/admin/dashboard']); 
+          this.router.navigate(['/']); 
         }
         this.loading.set(false);
       },

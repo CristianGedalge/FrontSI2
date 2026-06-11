@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment';
 })
 export class UsuarioService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/usuarios/`;
+  private apiUrl = `${environment.apiUrl}/usuarios`;
 
   private getHeaders() {
     const token = localStorage.getItem('token');
@@ -18,7 +18,7 @@ export class UsuarioService {
   }
 
   listar(): Observable<any[]> {
-    return this.http.get<any[]>(this.apiUrl, { headers: this.getHeaders() });
+    return this.http.get<any[]>(`${this.apiUrl}/`, { headers: this.getHeaders() });
   }
 
   actualizar(id: number, datos: any): Observable<any> {

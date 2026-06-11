@@ -34,9 +34,18 @@ export const routes: Routes = [
         path: 'reportes',
         loadComponent: () => import('./features/admin/reportes/reportes.component').then(m => m.ReportesComponent)
       },
+
       {
         path: 'historial',
         loadComponent: () => import('./features/admin/historial/historial.component').then(m => m.HistorialComponent)
+      },
+      {
+        path: 'servicios-en-vivo',
+        loadComponent: () => import('./features/admin/servicios-en-vivo/servicios-en-vivo.component').then(m => m.ServiciosEnVivoComponent)
+      },
+      {
+        path: 'mi-taller',
+        loadComponent: () => import('./features/admin/mi-taller/mi-taller.component').then(m => m.MiTallerComponent)
       }
     ]
   },
@@ -44,6 +53,10 @@ export const routes: Routes = [
     path: 'super-admin',
     component: AdminLayout,
     children: [
+      {
+        path: 'dashboard',
+        loadComponent: () => import('./features/super-admin/dashboard/dashboard.component').then(m => m.DashboardComponent)
+      },
       {
         path: 'talleres',
         loadComponent: () => import('./features/super-admin/talleres/talleres.component').then(m => m.TalleresComponent)
@@ -55,6 +68,10 @@ export const routes: Routes = [
       {
         path: 'usuarios',
         loadComponent: () => import('./features/super-admin/usuarios/usuarios.component').then(m => m.UsuariosComponent)
+      },
+      {
+        path: 'reportes',
+        loadComponent: () => import('./features/admin/reportes/reportes.component').then(m => m.ReportesComponent)
       }
     ]
   }

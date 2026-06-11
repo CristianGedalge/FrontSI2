@@ -22,14 +22,14 @@ export class TallerService {
   }
 
   obtener(id: number): Observable<any> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+    return this.http.get<any>(`${this.apiUrl}${id}`, { headers: this.getHeaders() });
   }
 
   actualizar(id: number, datos: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}`, datos, { headers: this.getHeaders() });
+    return this.http.put<any>(`${this.apiUrl}${id}`, datos, { headers: this.getHeaders() });
   }
 
   eliminar(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+    return this.http.delete<any>(`${this.apiUrl}${id}`, { headers: this.getHeaders() });
   }
 }

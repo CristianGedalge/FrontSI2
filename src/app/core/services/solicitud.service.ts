@@ -40,4 +40,16 @@ export class SolicitudService {
   listarHistorial(): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/historial`, { headers: this.getHeaders() });
   }
+
+  listarEnVivo(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.apiUrl}/en-vivo`, { headers: this.getHeaders() });
+  }
+
+  obtenerMetricas(dias: number = 30): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/metricas/taller?dias=${dias}`, { headers: this.getHeaders() });
+  }
+
+  obtenerMetricasGlobales(dias: number = 30): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/metricas/global?dias=${dias}`, { headers: this.getHeaders() });
+  }
 }

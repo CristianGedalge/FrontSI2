@@ -1,92 +1,205 @@
-import { Component, inject } from '@angular/core';
-import { AuthService } from '../../../core/services/auth.service';
-import { Router } from '@angular/router';
-import { JsonPipe } from '@angular/common';
+import { Component, OnInit, inject, signal } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { SolicitudService } from '../../../core/services/solicitud.service';
 
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [JsonPipe],
+  imports: [CommonModule, FormsModule],
   template: `
-<div class="min-h-screen bg-slate-50 flex flex-col font-sans">
-  <nav class="bg-white border-b px-8 py-4 flex justify-between items-center shadow-sm">
+<div class="space-y-8 animate-in fade-in duration-500">
+  <!-- Header -->
+  <div class="flex justify-between items-end flex-wrap gap-4">
+    <div>
+      <h1 class="text-3xl font-black text-slate-800 tracking-tight">Dashboard del Taller</h1>
+      <p class="text-slate-500 font-medium">Métricas de rendimiento operativo de tu taller</p>
+    </div>
     <div class="flex items-center gap-2">
-      <div class="bg-primary-500 text-white p-1.5 rounded-lg">
-        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5">
-          <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17 17.25 21A2.673 2.673 0 0 1 13.917 21l-5.83-5.83M11.42 15.17l2.83-2.83m-2.83 2.83-5.66-5.66m1.415-1.414 1.414-1.414m-1.414 1.414L11.42 15.17Zm4.242-4.242a2.828 2.828 0 1 1-4.001-4.002 2.828 2.828 0 0 1 4.001 4.002Z" />
-        </svg>
-      </div>
-      <h1 class="text-xl font-bold text-slate-800 tracking-tight">Panel TallerIO</h1>
+      <label class="text-sm font-bold text-slate-500">Período:</label>
+      <select [(ngModel)]="diasSeleccionados" (ngModelChange)="cargarMetricas()" class="bg-white border border-slate-200 rounded-xl px-3 py-2 text-sm font-bold text-slate-700 shadow-sm outline-none">
+        <option [value]="7">Últimos 7 días</option>
+        <option [value]="30">Últimos 30 días</option>
+        <option [value]="90">Últimos 90 días</option>
+        <option [value]="365">Último año</option>
+      </select>
     </div>
-    <div class="flex items-center gap-6">
-      <div class="text-right">
-        <p class="text-sm font-bold text-slate-900 leading-none mb-1">{{ auth.currentUser()?.nombre }}</p>
-        <p class="text-xs text-slate-400 leading-none">{{ auth.currentUser()?.correo }}</p>
+  </div>
+
+  <!-- Loading -->
+  <div *ngIf="cargando()" class="flex justify-center py-20">
+    <div class="w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full animate-spin"></div>
+  </div>
+
+  <ng-container *ngIf="metricas() && !cargando()">
+    <!-- KPI Cards Row -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+        <p class="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Total Solicitudes</p>
+        <p class="text-3xl font-black text-slate-800">{{ metricas()?.total_solicitudes ?? 0 }}</p>
+        <p class="text-xs text-slate-400 font-medium mt-1">últimos {{ diasSeleccionados }} días</p>
       </div>
-      <button (click)="logout()" class="btn border border-slate-200 text-slate-600 hover:bg-slate-50 py-2 text-sm px-4">
-        Cerrar Sesión
-      </button>
+      <div class="bg-white rounded-2xl p-5 border border-emerald-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+        <p class="text-[10px] font-black uppercase tracking-widest text-emerald-500 mb-1">Finalizadas</p>
+        <p class="text-3xl font-black text-emerald-600">{{ metricas()?.finalizadas ?? 0 }}</p>
+        <p class="text-xs text-emerald-400 font-medium mt-1">servicios completados</p>
+      </div>
+      <div class="bg-white rounded-2xl p-5 border border-red-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+        <p class="text-[10px] font-black uppercase tracking-widest text-red-400 mb-1">Canceladas</p>
+        <p class="text-3xl font-black text-red-500">{{ metricas()?.canceladas ?? 0 }}</p>
+        <p class="text-xs text-red-300 font-medium mt-1">tasa: {{ metricas()?.tasa_cancelacion_pct ?? 0 }}%</p>
+      </div>
+      <div class="bg-white rounded-2xl p-5 border border-blue-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)]">
+        <p class="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-1">Ingresos</p>
+        <p class="text-3xl font-black text-blue-600">Bs. {{ metricas()?.ingresos_periodo ?? 0 }}</p>
+        <p class="text-xs text-blue-400 font-medium mt-1">solo servicios pagados</p>
+      </div>
     </div>
-  </nav>
-  
-  <main class="p-8 max-w-7xl mx-auto w-full">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-10">
-      <div class="bg-white p-8 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-slate-100 flex items-center gap-4">
-        <div class="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center text-2xl">✓</div>
-        <div>
-          <h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider">Estatus</h3>
-          <p class="text-xl font-black text-slate-800">Taller Activo</p>
+
+    <!-- Tiempos Promedio -->
+    <div class="bg-white rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)] p-6">
+      <h2 class="text-lg font-black text-slate-800 mb-1">⏱ Tiempos Promedio (en minutos)</h2>
+      <p class="text-xs text-slate-400 font-medium mb-6">Trazabilidad completa del ciclo de vida de cada emergencia</p>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <!-- Asignación -->
+        <div class="bg-amber-50 rounded-2xl p-5 border border-amber-100">
+          <p class="text-[10px] font-black uppercase tracking-widest text-amber-500 mb-2">Tiempo de Asignación</p>
+          <p class="text-sm text-amber-700 font-medium mb-3">Desde la alerta hasta que un taller la acepta</p>
+          <p class="text-4xl font-black text-amber-600">
+            {{ metricas()?.tiempo_prom_asignacion_min !== null ? metricas()?.tiempo_prom_asignacion_min + ' min' : 'N/A' }}
+          </p>
+          <div class="mt-3 bg-amber-200/40 h-2 rounded-full overflow-hidden">
+            <div class="bg-amber-400 h-full rounded-full transition-all" [style.width.%]="getTiempoBar(metricas()?.tiempo_prom_asignacion_min, 60)"></div>
+          </div>
         </div>
-      </div>
-      <div class="bg-white p-8 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-slate-100 flex items-center gap-4">
-        <div class="w-12 h-12 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center text-2xl">👥</div>
-        <div>
-          <h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider">Mecánicos</h3>
-          <p class="text-xl font-black text-slate-800">0 Registrados</p>
+        <!-- Llegada -->
+        <div class="bg-purple-50 rounded-2xl p-5 border border-purple-100">
+          <p class="text-[10px] font-black uppercase tracking-widest text-purple-500 mb-2">Tiempo de Llegada</p>
+          <p class="text-sm text-purple-700 font-medium mb-3">Desde que sale hasta que llega al cliente</p>
+          <p class="text-4xl font-black text-purple-600">
+            {{ metricas()?.tiempo_prom_llegada_min !== null ? metricas()?.tiempo_prom_llegada_min + ' min' : 'N/A' }}
+          </p>
+          <div class="mt-3 bg-purple-200/40 h-2 rounded-full overflow-hidden">
+            <div class="bg-purple-400 h-full rounded-full transition-all" [style.width.%]="getTiempoBar(metricas()?.tiempo_prom_llegada_min, 120)"></div>
+          </div>
         </div>
-      </div>
-      <div class="bg-white p-8 rounded-3xl shadow-[0_10px_40px_rgba(0,0,0,0.03)] border border-slate-100 flex items-center gap-4">
-        <div class="w-12 h-12 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center text-2xl">⚡</div>
-        <div>
-          <h3 class="text-slate-400 text-xs font-bold uppercase tracking-wider">Servicios</h3>
-          <p class="text-xl font-black text-slate-800">0 Solicitudes</p>
+        <!-- Servicio -->
+        <div class="bg-cyan-50 rounded-2xl p-5 border border-cyan-100">
+          <p class="text-[10px] font-black uppercase tracking-widest text-cyan-500 mb-2">Tiempo de Servicio</p>
+          <p class="text-sm text-cyan-700 font-medium mb-3">Desde la llegada hasta la finalización</p>
+          <p class="text-4xl font-black text-cyan-600">
+            {{ metricas()?.tiempo_prom_servicio_min !== null ? metricas()?.tiempo_prom_servicio_min + ' min' : 'N/A' }}
+          </p>
+          <div class="mt-3 bg-cyan-200/40 h-2 rounded-full overflow-hidden">
+            <div class="bg-cyan-400 h-full rounded-full transition-all" [style.width.%]="getTiempoBar(metricas()?.tiempo_prom_servicio_min, 180)"></div>
+          </div>
         </div>
       </div>
     </div>
 
-    <div class="bg-white p-12 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.02)] border border-slate-100 min-h-[400px] flex flex-col items-center justify-center text-center">
-       <div class="max-w-md">
-         <div class="w-20 h-20 bg-slate-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-10 h-10 text-slate-300">
-              <path stroke-linecap="round" stroke-linejoin="round" d="M9 17.25v1.007a3 3 0 0 1-.879 2.122L7.5 21h9l-.621-.621A3 3 0 0 1 15 18.257V17.25m6-12V15a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 15V5.25m18 0A2.25 2.25 0 0 0 18.75 3H5.25A2.25 2.25 0 0 0 3 5.25m18 0V12a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 12V5.25" />
+    <!-- Tipos de Incidente -->
+    <div class="bg-white rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)] p-6">
+      <h2 class="text-lg font-black text-slate-800 mb-1">📊 Tipos de Incidente</h2>
+      <p class="text-xs text-slate-400 font-medium mb-6">Distribución de solicitudes por categoría de servicio</p>
+      <div *ngIf="metricas()?.tipos_incidente?.length === 0" class="text-center py-8 text-slate-400 font-bold">
+        Sin datos para este período.
+      </div>
+      <div class="space-y-3">
+        <div *ngFor="let tipo of metricas()?.tipos_incidente" class="flex items-center gap-4">
+          <div class="w-32 text-sm font-bold text-slate-600 truncate shrink-0">{{ tipo.nombre }}</div>
+          <div class="flex-grow bg-slate-100 rounded-full h-3 overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-700"
+                 [style.width.%]="getTipoBar(tipo.total)"></div>
+          </div>
+          <div class="w-10 text-right text-sm font-black text-slate-700">{{ tipo.total }}</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tasa de Cancelacion -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)] p-6">
+        <h2 class="text-lg font-black text-slate-800 mb-1">❌ Servicios No Atendidos</h2>
+        <p class="text-xs text-slate-400 font-medium mb-6">Emergencias canceladas o rechazadas</p>
+        <div class="flex items-center gap-6">
+          <div class="relative w-28 h-28 shrink-0">
+            <svg class="w-full h-full -rotate-90" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#f1f5f9" stroke-width="3"/>
+              <circle cx="18" cy="18" r="15.9155" fill="none" stroke="#f87171" stroke-width="3"
+                      [attr.stroke-dasharray]="(metricas()?.tasa_cancelacion_pct ?? 0) + ', 100'"
+                      stroke-linecap="round" class="transition-all duration-1000"/>
             </svg>
-         </div>
-         <h2 class="text-2xl font-bold text-slate-800 mb-4">¡Sesión Iniciada!</h2>
-         <p class="text-slate-500 italic mb-8">El panel administrativo está siendo preparado. Abajo puedes ver los metadatos decodificados de tu sesión actual.</p>
-         
-         <div class="bg-slate-900 rounded-3xl p-6 text-left shadow-2xl overflow-hidden border border-slate-800">
-            <div class="flex items-center gap-2 mb-4 border-b border-slate-800 pb-2">
-              <div class="w-2 h-2 rounded-full bg-red-500"></div>
-              <div class="w-2 h-2 rounded-full bg-yellow-500"></div>
-              <div class="w-2 h-2 rounded-full bg-green-500"></div>
-              <span class="text-[10px] uppercase tracking-widest text-slate-500 font-bold ml-2">JWT payload debug</span>
+            <div class="absolute inset-0 flex items-center justify-center">
+              <span class="text-xl font-black text-red-500">{{ metricas()?.tasa_cancelacion_pct ?? 0 }}%</span>
             </div>
-            <pre class="text-emerald-400 text-[11px] leading-relaxed font-mono">
-{{ auth.currentUser() | json }}
-            </pre>
-         </div>
-       </div>
-    </div>
-  </main>
-</div>
-  `,
-})
-export class AdminDashboard {
-  auth = inject(AuthService);
-  router = inject(Router);
+          </div>
+          <div>
+            <p class="text-4xl font-black text-slate-800">{{ metricas()?.canceladas ?? 0 }}</p>
+            <p class="text-sm text-slate-400 font-medium">de {{ metricas()?.total_solicitudes }} totales</p>
+            <p class="text-xs text-slate-400 mt-2">Una tasa menor al 10% es excelente.</p>
+          </div>
+        </div>
+      </div>
 
-  logout() {
-    this.auth.logout();
-    this.router.navigate(['/']);
+      <div class="bg-white rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_rgba(0,0,0,0.02)] p-6">
+        <h2 class="text-lg font-black text-slate-800 mb-1">✅ En Curso Actualmente</h2>
+        <p class="text-xs text-slate-400 font-medium mb-6">Solicitudes activas en este momento</p>
+        <div class="flex items-center gap-6">
+          <div class="relative flex items-center justify-center w-28 h-28 shrink-0">
+            <div class="absolute w-full h-full rounded-full bg-emerald-50 border-4 border-emerald-100"></div>
+            <span class="relative text-4xl font-black text-emerald-600">{{ metricas()?.en_curso ?? 0 }}</span>
+          </div>
+          <div>
+            <p class="text-sm text-slate-400 font-bold">Pendientes, Aceptadas,</p>
+            <p class="text-sm text-slate-400 font-bold">En Camino y En Sitio.</p>
+            <p class="text-xs text-slate-400 mt-2">Estas aparecen en tu vista "En Vivo".</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+
+  <!-- Error / Sin datos -->
+  <div *ngIf="!cargando() && !metricas()" class="bg-white rounded-[2rem] border border-red-100 p-12 text-center">
+    <p class="text-red-400 font-bold">No se pudieron cargar las métricas. Verifica que el servidor esté activo.</p>
+    <button (click)="cargarMetricas()" class="mt-4 text-primary-500 font-black underline">Reintentar</button>
+  </div>
+</div>
+  `
+})
+export class AdminDashboard implements OnInit {
+  private solicitudService = inject(SolicitudService);
+  metricas = signal<any | null>(null);
+  cargando = signal(true);
+  diasSeleccionados = 30;
+
+  ngOnInit() {
+    this.cargarMetricas();
+  }
+
+  cargarMetricas() {
+    this.cargando.set(true);
+    this.metricas.set(null);
+    this.solicitudService.obtenerMetricas(this.diasSeleccionados).subscribe({
+      next: (data) => {
+        this.metricas.set(data);
+        this.cargando.set(false);
+      },
+      error: (err) => {
+        console.error('Error cargando métricas:', err);
+        this.cargando.set(false);
+      }
+    });
+  }
+
+  getTiempoBar(valor: number | null | undefined, maximo: number): number {
+    if (!valor) return 0;
+    return Math.min((valor / maximo) * 100, 100);
+  }
+
+  getTipoBar(total: number): number {
+    const tipos = this.metricas()?.tipos_incidente ?? [];
+    const max = Math.max(...tipos.map((t: any) => t.total), 1);
+    return (total / max) * 100;
   }
 }

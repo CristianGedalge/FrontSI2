@@ -1,19 +1,42 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, inject, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormsModule } from '@angular/forms';
 import { UsuarioService } from '../../../core/services/usuario.service';
 
 @Component({
   selector: 'app-superadmin-usuarios',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule],
   template: `
 <div class="space-y-8">
-  <div class="flex justify-between items-center">
+  <div class="flex justify-between items-end flex-wrap gap-4">
     <div>
       <h1 class="text-3xl font-black text-slate-800 tracking-tight">Usuarios</h1>
       <p class="text-slate-500 font-medium">Gestión global de cuentas de usuario</p>
     </div>
+    <div class="flex items-center gap-4">
+      <!-- Search Bar -->
+      <div class="relative w-64">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5 text-slate-400 absolute left-3 top-2.5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+        </svg>
+        <input type="text" [(ngModel)]="searchTerm" placeholder="Buscar por nombre o correo..." 
+               class="w-full bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl pl-10 pr-4 py-2.5 shadow-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all placeholder:text-slate-300">
+      </div>
+    </div>
+  </div>
+
+  <!-- Role Filter (Dropdown) -->
+  <div class="flex items-center gap-3">
+    <label class="text-sm font-bold text-slate-500 uppercase tracking-widest">Filtrar por Rol:</label>
+    <select [(ngModel)]="roleFilter" (ngModelChange)="roleFilter.set($event)" 
+            class="bg-white border border-slate-200 text-slate-700 text-sm font-bold rounded-xl px-4 py-2.5 shadow-sm focus:border-primary-500 focus:ring-4 focus:ring-primary-500/10 outline-none transition-all cursor-pointer">
+      <option value="todos">Todos los usuarios</option>
+      <option value="cliente">Clientes</option>
+      <option value="mecanico">Mecánicos</option>
+      <option value="admin">Dueños de Taller (Admin)</option>
+      <option value="superadmin">SuperAdmins</option>
+    </select>
   </div>
 
   <!-- TABLE -->
@@ -25,12 +48,11 @@ import { UsuarioService } from '../../../core/services/usuario.service';
           <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Correo</th>
           <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Teléfono</th>
           <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Rol</th>
-          <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Estado</th>
           <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest text-right">Acciones</th>
         </tr>
       </thead>
       <tbody class="divide-y divide-slate-100">
-        <tr *ngFor="let user of usuarios()" class="hover:bg-slate-50/50 transition-colors group">
+        <tr *ngFor="let user of filteredUsuarios()" class="hover:bg-slate-50/50 transition-colors group">
           <td class="px-8 py-5">
             <div class="flex items-center gap-3">
               <div class="w-10 h-10 bg-primary-100 text-primary-600 rounded-xl flex items-center justify-center font-bold">
@@ -47,12 +69,7 @@ import { UsuarioService } from '../../../core/services/usuario.service';
               {{ user.rol }}
             </span>
           </td>
-          <td class="px-8 py-5">
-            <span class="px-3 py-1 text-[10px] font-black uppercase rounded-lg"
-                  [ngClass]="user.estado ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'">
-              {{ user.estado ? 'Activo' : 'Inactivo' }}
-            </span>
-          </td>
+
           <td class="px-8 py-5 text-right">
             <div class="flex justify-end gap-2">
               <button (click)="openModal(user)" class="w-8 h-8 flex items-center justify-center rounded-lg bg-blue-50 text-blue-500 hover:bg-blue-500 hover:text-white transition-all shadow-sm" title="Editar Rol">
@@ -68,9 +85,9 @@ import { UsuarioService } from '../../../core/services/usuario.service';
             </div>
           </td>
         </tr>
-        <tr *ngIf="usuarios().length === 0">
-          <td colspan="6" class="px-8 py-20 text-center text-slate-400 italic">
-            No hay usuarios registrados.
+        <tr *ngIf="filteredUsuarios().length === 0">
+          <td colspan="6" class="px-8 py-20 text-center text-slate-400 italic font-bold">
+            No se encontraron usuarios que coincidan con los filtros.
           </td>
         </tr>
       </tbody>
@@ -122,6 +139,31 @@ export class UsuariosComponent implements OnInit {
   isModalOpen = signal(false);
   loading = signal(false);
   editingId = signal<number | null>(null);
+
+  // Filtros
+  searchTerm = signal('');
+  roleFilter = signal('todos');
+
+  filteredUsuarios = computed(() => {
+    let result = this.usuarios();
+    const role = this.roleFilter();
+    const search = this.searchTerm().toLowerCase();
+
+    // Filtro por Rol
+    if (role !== 'todos') {
+      result = result.filter(u => u.rol === role);
+    }
+
+    // Filtro por Búsqueda de Texto
+    if (search.trim() !== '') {
+      result = result.filter(u => 
+        u.nombre.toLowerCase().includes(search) || 
+        u.correo.toLowerCase().includes(search)
+      );
+    }
+
+    return result;
+  });
 
   userForm: FormGroup = this.fb.group({
     rol: ['', Validators.required]
