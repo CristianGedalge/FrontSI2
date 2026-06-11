@@ -8,7 +8,7 @@ import { environment } from '../../../environments/environment';
 })
 export class MecanicoService {
   private http = inject(HttpClient);
-  private apiUrl = `${environment.apiUrl}/mecanicos`;
+  private apiUrl = `${environment.apiUrl}/mecanicos/`;
 
   private getHeaders() {
     const token = localStorage.getItem('token');
@@ -26,10 +26,10 @@ export class MecanicoService {
   }
 
   actualizar(id: number, datos: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}`, datos, { headers: this.getHeaders() });
+    return this.http.put<any>(`${this.apiUrl}${id}`, datos, { headers: this.getHeaders() });
   }
 
   eliminar(id: number): Observable<any> {
-    return this.http.delete<any>(`${this.apiUrl}/${id}`, { headers: this.getHeaders() });
+    return this.http.delete<any>(`${this.apiUrl}${id}`, { headers: this.getHeaders() });
   }
 }
