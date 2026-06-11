@@ -25,7 +25,8 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 
   <!-- TABLE -->
   <div class="bg-white rounded-[2rem] shadow-[0_20px_60px_rgba(0,0,0,0.03)] border border-slate-100 overflow-hidden">
-    <table class="w-full text-left border-collapse">
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse min-w-[900px]">
       <thead>
         <tr class="bg-slate-50/50 border-b border-slate-100">
           <th class="px-8 py-5 text-xs font-bold text-slate-400 uppercase tracking-widest">Nombre</th>
@@ -88,6 +89,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
         </tr>
       </tbody>
     </table>
+    </div>
   </div>
 
   <!-- MODAL -->

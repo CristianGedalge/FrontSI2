@@ -89,7 +89,7 @@ import autoTable from 'jspdf-autotable';
               <td class="p-4 font-bold text-red-500">{{ m.cancelados }}</td>
               <td class="p-4 font-black text-blue-600 text-right">Bs. {{ m.ingresos | number:'1.2-2' }}</td>
             </tr>
-            <tr *ngIf="reporteMecanicos()?.length === 0">
+            <tr *ngIf="reporteMecanicos().length === 0">
               <td colspan="5" class="p-8 text-center text-slate-400 font-bold">No hay datos para este período.</td>
             </tr>
           </tbody>
@@ -157,7 +157,7 @@ import autoTable from 'jspdf-autotable';
                 {{ s.precio_final > 0 ? (s.precio_final | number:'1.2-2') : '-' }}
               </td>
             </tr>
-            <tr *ngIf="reporteServicios()?.length === 0">
+            <tr *ngIf="reporteServicios().length === 0">
               <td colspan="9" class="p-8 text-center text-slate-400 font-bold">No hay servicios en este período.</td>
             </tr>
           </tbody>
